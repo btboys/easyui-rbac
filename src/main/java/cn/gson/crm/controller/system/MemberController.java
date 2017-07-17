@@ -2,6 +2,8 @@ package cn.gson.crm.controller.system;
 
 import cn.gson.crm.common.AjaxResult;
 import cn.gson.crm.common.DataGrid;
+import cn.gson.crm.common.MySpecification;
+import cn.gson.crm.common.MySpecification.Condition;
 import cn.gson.crm.model.dao.MemberDao;
 import cn.gson.crm.model.dao.RoleDao;
 import cn.gson.crm.model.domain.Member;
@@ -22,12 +24,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.persistence.criteria.Predicate;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * 用户管理控制器
@@ -62,22 +61,12 @@ public class MemberController {
     @ResponseBody
     public DataGrid<Member> list(int page, int rows, String userName, String realName, String telephone) {
         PageRequest pr = new PageRequest(page - 1, rows, Direction.DESC, "id");
-        Page pageData = memberDao.findAll((root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
 
-            if (isNotEmpty(userName)) {
-                predicates.add(cb.like(root.get("userName"), "%" + userName + "%"));
-            }
-            if (isNotEmpty(realName)) {
-                predicates.add(cb.like(root.get("realName"), "%" + realName + "%"));
-            }
-            if (isNotEmpty(telephone)) {
-                predicates.add(cb.equal(root.get("userName"), telephone));
-            }
-
-            query.where(predicates.toArray(new Predicate[0]));
-            return null;
-        }, pr);
+        Page pageData = memberDao.findAll(new MySpecification<Member>().and(
+                Condition.like("userName", userName),
+                Condition.like("realName", realName),
+                Condition.eq("telephone", telephone)
+        ), pr);
 
         return new DataGrid<>(pageData);
 
