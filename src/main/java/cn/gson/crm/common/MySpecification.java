@@ -1,16 +1,29 @@
 package cn.gson.crm.common;
 
+import org.apache.commons.lang.StringUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * <p>****************************************************************************</p>
  * <p><b>Copyright © 2010-2017 soho team All Rights Reserved<b></p>
+ * <pre>
+ *  PageRequest pr = new PageRequest(0, 10);
+ *  Page pageData = memberDao.findAll(new MySpecification<Member>().and(
+ *      Condition.like("userName", userName),
+ *      Condition.like("realName", realName),
+ *      Condition.eq("telephone", telephone)
+ *  ).asc("id"), pr);
+ * </pre>
  * <ul style="margin:15px;">
- * <li>Description : cn.gson.crm.common</li>
+ * <li>Description : 基于Spring JPA的复杂查询封装</li>
  * <li>Version     : 1.0</li>
  * <li>Creation    : 2017年07月17日</li>
  * <li>Author      : 郭华</li>
@@ -19,15 +32,79 @@ import java.util.List;
  */
 public class MySpecification<T> implements Specification<T> {
 
+    /**
+     * 属性分隔符
+     */
+    private static final String PROPERTY_SEPARATOR = ".";
+
+    /**
+     * and条件组
+     */
     List<Condition> andConditions = new ArrayList<>();
+    /**
+     * or条件组
+     */
     List<Condition> orConditions = new ArrayList<>();
+    /**
+     * 排序条件组
+     */
+    List<Order> orders = new ArrayList<>();
 
     @Override
     public Predicate toPredicate(Root<T> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
         Predicate restrictions = cb.and(getAndPredicates(root, cb));
         restrictions = cb.and(restrictions, getOrPredicates(root, cb));
-        //query.orderBy(toOrders(root,cb));
+        cq.orderBy(getOrders(root, cb));
         return restrictions;
+    }
+
+    public MySpecification and(Collection<Condition> conditions) {
+        andConditions.addAll(conditions);
+        return this;
+    }
+
+    public MySpecification and(Condition... conditions) {
+        for (Condition condition : conditions) {
+            andConditions.add(condition);
+        }
+        return this;
+    }
+
+    public MySpecification or(Collection<Condition> conditions) {
+        orConditions.addAll(conditions);
+        return this;
+    }
+
+    public MySpecification or(Condition... conditions) {
+        for (Condition condition : conditions) {
+            orConditions.add(condition);
+        }
+        return this;
+    }
+
+    public MySpecification desc(String property) {
+        this.orders.add(Order.desc(property));
+        return this;
+    }
+
+    public MySpecification asc(String property) {
+        this.orders.add(Order.asc(property));
+        return this;
+    }
+
+    public MySpecification order(String property, Sort.Direction direction) {
+        this.orders.add(new Order(property, direction));
+        return this;
+    }
+
+    public MySpecification orders(Order... orders) {
+        this.orders.addAll(Arrays.asList(orders));
+        return this;
+    }
+
+    public MySpecification orders(Collection<Order> orders) {
+        this.orders.addAll(orders);
+        return this;
     }
 
     private Predicate getAndPredicates(Root<T> root, CriteriaBuilder cb) {
@@ -36,7 +113,8 @@ public class MySpecification<T> implements Specification<T> {
             if (condition == null) {
                 continue;
             }
-            Path<?> path = root.get(condition.property);
+
+            Path<?> path = this.getPath(root, condition.property);
             if (path == null) {
                 continue;
             }
@@ -133,7 +211,7 @@ public class MySpecification<T> implements Specification<T> {
             if (condition == null) {
                 continue;
             }
-            Path<?> path = root.get(condition.property);
+            Path<?> path = this.getPath(root, condition.property);
             if (path == null) {
                 continue;
             }
@@ -224,18 +302,46 @@ public class MySpecification<T> implements Specification<T> {
         return restrictions;
     }
 
-    public MySpecification and(Condition... conditions) {
-        for (Condition condition : conditions) {
-            andConditions.add(condition);
+    private List<javax.persistence.criteria.Order> getOrders(Root<T> root, CriteriaBuilder cb) {
+        List<javax.persistence.criteria.Order> orderList = new ArrayList<>();
+        if (root == null || CollectionUtils.isEmpty(orders)) {
+            return orderList;
         }
-        return this;
+        for (Order order : orders) {
+            if (order == null) {
+                continue;
+            }
+            String property = order.getProperty();
+            Sort.Direction direction = order.getDirection();
+            Path<?> path = this.getPath(root, property);
+            if (path == null || direction == null) {
+                continue;
+            }
+            switch (direction) {
+                case ASC:
+                    orderList.add(cb.asc(path));
+                    break;
+                case DESC:
+                    orderList.add(cb.desc(path));
+                    break;
+            }
+        }
+        return orderList;
     }
 
-    public MySpecification or(Condition... conditions) {
-        for (Condition condition : conditions) {
-            orConditions.add(condition);
+    /**
+     * 获取Path
+     *
+     * @param path         Path
+     * @param propertyPath 属性路径
+     * @return Path
+     */
+    private <X> Path<X> getPath(Path<?> path, String propertyPath) {
+        if (path == null || StringUtils.isEmpty(propertyPath)) {
+            return (Path<X>) path;
         }
-        return this;
+        String property = StringUtils.substringBefore(propertyPath, PROPERTY_SEPARATOR);
+        return getPath(path.get(property), StringUtils.substringAfter(propertyPath, PROPERTY_SEPARATOR));
     }
 
     public static class Condition {
@@ -407,6 +513,62 @@ public class MySpecification<T> implements Specification<T> {
             return new Condition(property, Operator.isNotNull);
         }
 
+    }
+
+    public static class Order {
+        private String property;
+        private Sort.Direction direction = Sort.Direction.ASC;
+
+        /**
+         * 构造方法
+         */
+        public Order() {
+        }
+
+        /**
+         * 构造方法
+         *
+         * @param property  属性
+         * @param direction 方向
+         */
+        public Order(String property, Sort.Direction direction) {
+            this.property = property;
+            this.direction = direction;
+        }
+
+        /**
+         * 返回递增排序
+         *
+         * @param property 属性
+         * @return 递增排序
+         */
+        public static Order asc(String property) {
+            return new Order(property, Sort.Direction.ASC);
+        }
+
+        /**
+         * 返回递减排序
+         *
+         * @param property 属性
+         * @return 递减排序
+         */
+        public static Order desc(String property) {
+            return new Order(property, Sort.Direction.DESC);
+        }
+
+
+        @Override
+        public String toString() {
+            return property + " " + direction.name();
+        }
+
+        public Sort.Direction getDirection() {
+            return direction;
+        }
+
+        public String getProperty() {
+            return property;
+        }
     }
 
     /**

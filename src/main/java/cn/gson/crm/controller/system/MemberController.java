@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -60,13 +59,13 @@ public class MemberController {
     @RequestMapping("/list")
     @ResponseBody
     public DataGrid<Member> list(int page, int rows, String userName, String realName, String telephone) {
-        PageRequest pr = new PageRequest(page - 1, rows, Direction.DESC, "id");
+        PageRequest pr = new PageRequest(page - 1, rows);
 
         Page pageData = memberDao.findAll(new MySpecification<Member>().and(
                 Condition.like("userName", userName),
                 Condition.like("realName", realName),
                 Condition.eq("telephone", telephone)
-        ), pr);
+        ).asc("id"), pr);
 
         return new DataGrid<>(pageData);
 
