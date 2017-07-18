@@ -61,6 +61,7 @@ public class MemberController {
     public DataGrid<Member> list(int page, int rows, String userName, String realName, String telephone) {
         PageRequest pr = new PageRequest(page - 1, rows);
 
+        //使用了自定义的复杂查询，这就比原生的Specification的语法使用流畅多了
         Page pageData = memberDao.findAll(new MySpecification<Member>().and(
                 Cnd.like("userName", userName),
                 Cnd.like("realName", realName),
