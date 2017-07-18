@@ -17,9 +17,9 @@ import java.util.List;
  * <pre>
  *  PageRequest pr = new PageRequest(0, 10);
  *  Page pageData = memberDao.findAll(new MySpecification<Member>().and(
- *      Condition.like("userName", userName),
- *      Condition.like("realName", realName),
- *      Condition.eq("telephone", telephone)
+ *      Cnd.like("userName", userName),
+ *      Cnd.like("realName", realName),
+ *      Cnd.eq("telephone", telephone)
  *  ).asc("id"), pr);
  * </pre>
  * <ul style="margin:15px;">
@@ -40,11 +40,11 @@ public class MySpecification<T> implements Specification<T> {
     /**
      * and条件组
      */
-    List<Condition> andConditions = new ArrayList<>();
+    List<Cnd> andConditions = new ArrayList<>();
     /**
      * or条件组
      */
-    List<Condition> orConditions = new ArrayList<>();
+    List<Cnd> orConditions = new ArrayList<>();
     /**
      * 排序条件组
      */
@@ -58,25 +58,25 @@ public class MySpecification<T> implements Specification<T> {
         return restrictions;
     }
 
-    public MySpecification and(Collection<Condition> conditions) {
+    public MySpecification and(Collection<Cnd> conditions) {
         andConditions.addAll(conditions);
         return this;
     }
 
-    public MySpecification and(Condition... conditions) {
-        for (Condition condition : conditions) {
+    public MySpecification and(Cnd... conditions) {
+        for (Cnd condition : conditions) {
             andConditions.add(condition);
         }
         return this;
     }
 
-    public MySpecification or(Collection<Condition> conditions) {
+    public MySpecification or(Collection<Cnd> conditions) {
         orConditions.addAll(conditions);
         return this;
     }
 
-    public MySpecification or(Condition... conditions) {
-        for (Condition condition : conditions) {
+    public MySpecification or(Cnd... conditions) {
+        for (Cnd condition : conditions) {
             orConditions.add(condition);
         }
         return this;
@@ -109,7 +109,7 @@ public class MySpecification<T> implements Specification<T> {
 
     private Predicate getAndPredicates(Root<T> root, CriteriaBuilder cb) {
         Predicate restrictions = cb.conjunction();
-        for (Condition condition : andConditions) {
+        for (Cnd condition : andConditions) {
             if (condition == null) {
                 continue;
             }
@@ -207,7 +207,7 @@ public class MySpecification<T> implements Specification<T> {
 
     private Predicate getOrPredicates(Root<T> root, CriteriaBuilder cb) {
         Predicate restrictions = cb.conjunction();
-        for (Condition condition : orConditions) {
+        for (Cnd condition : orConditions) {
             if (condition == null) {
                 continue;
             }
@@ -344,19 +344,22 @@ public class MySpecification<T> implements Specification<T> {
         return getPath(path.get(property), StringUtils.substringAfter(propertyPath, PROPERTY_SEPARATOR));
     }
 
-    public static class Condition {
+    /**
+     * 条件
+     */
+    public static class Cnd {
 
         Operator operator;
         String property;
         Object value;
 
-        public Condition(String property, Operator operator, Object value) {
+        public Cnd(String property, Operator operator, Object value) {
             this.operator = operator;
             this.property = property;
             this.value = value;
         }
 
-        public Condition(String property, Operator operator) {
+        public Cnd(String property, Operator operator) {
             this.operator = operator;
             this.property = property;
         }
@@ -368,8 +371,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition eq(String property, Object value) {
-            return new Condition(property, Operator.eq, value);
+        public static Cnd eq(String property, Object value) {
+            return new Cnd(property, Operator.eq, value);
         }
 
         /**
@@ -379,8 +382,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition ne(String property, Object value) {
-            return new Condition(property, Operator.ne, value);
+        public static Cnd ne(String property, Object value) {
+            return new Cnd(property, Operator.ne, value);
         }
 
         /**
@@ -390,8 +393,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition gt(String property, Object value) {
-            return new Condition(property, Operator.gt, value);
+        public static Cnd gt(String property, Object value) {
+            return new Cnd(property, Operator.gt, value);
         }
 
         /**
@@ -401,8 +404,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition lt(String property, Object value) {
-            return new Condition(property, Operator.lt, value);
+        public static Cnd lt(String property, Object value) {
+            return new Cnd(property, Operator.lt, value);
         }
 
         /**
@@ -412,8 +415,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition ge(String property, Object value) {
-            return new Condition(property, Operator.ge, value);
+        public static Cnd ge(String property, Object value) {
+            return new Cnd(property, Operator.ge, value);
         }
 
         /**
@@ -423,8 +426,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition le(String property, Object value) {
-            return new Condition(property, Operator.le, value);
+        public static Cnd le(String property, Object value) {
+            return new Cnd(property, Operator.le, value);
         }
 
         /**
@@ -434,8 +437,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition like(String property, Object value) {
-            return new Condition(property, Operator.like, value);
+        public static Cnd like(String property, Object value) {
+            return new Cnd(property, Operator.like, value);
         }
 
         /**
@@ -445,8 +448,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition rlike(String property, Object value) {
-            return new Condition(property, Operator.rlike, value);
+        public static Cnd rlike(String property, Object value) {
+            return new Cnd(property, Operator.rlike, value);
         }
 
         /**
@@ -456,8 +459,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition llike(String property, Object value) {
-            return new Condition(property, Operator.llike, value);
+        public static Cnd llike(String property, Object value) {
+            return new Cnd(property, Operator.llike, value);
         }
 
         /**
@@ -467,8 +470,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition ilike(String property, Object value) {
-            return new Condition(property, Operator.ilike, value);
+        public static Cnd ilike(String property, Object value) {
+            return new Cnd(property, Operator.ilike, value);
         }
 
         /**
@@ -478,8 +481,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition in(String property, Object value) {
-            return new Condition(property, Operator.in, value);
+        public static Cnd in(String property, Object value) {
+            return new Cnd(property, Operator.in, value);
         }
 
         /**
@@ -489,8 +492,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param value
          * @return
          */
-        public static Condition notIn(String property, Object value) {
-            return new Condition(property, Operator.notIn, value);
+        public static Cnd notIn(String property, Object value) {
+            return new Cnd(property, Operator.notIn, value);
         }
 
         /**
@@ -499,8 +502,8 @@ public class MySpecification<T> implements Specification<T> {
          * @param property
          * @return
          */
-        public static Condition isNull(String property) {
-            return new Condition(property, Operator.isNull);
+        public static Cnd isNull(String property) {
+            return new Cnd(property, Operator.isNull);
         }
 
         /**
@@ -509,12 +512,15 @@ public class MySpecification<T> implements Specification<T> {
          * @param property
          * @return
          */
-        public static Condition isNotNull(String property) {
-            return new Condition(property, Operator.isNotNull);
+        public static Cnd isNotNull(String property) {
+            return new Cnd(property, Operator.isNotNull);
         }
 
     }
 
+    /**
+     * 排序
+     */
     public static class Order {
         private String property;
         private Sort.Direction direction = Sort.Direction.ASC;

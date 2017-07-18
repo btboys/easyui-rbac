@@ -3,7 +3,7 @@ package cn.gson.crm.controller.system;
 import cn.gson.crm.common.AjaxResult;
 import cn.gson.crm.common.DataGrid;
 import cn.gson.crm.common.MySpecification;
-import cn.gson.crm.common.MySpecification.Condition;
+import cn.gson.crm.common.MySpecification.Cnd;
 import cn.gson.crm.model.dao.MemberDao;
 import cn.gson.crm.model.dao.RoleDao;
 import cn.gson.crm.model.domain.Member;
@@ -62,9 +62,9 @@ public class MemberController {
         PageRequest pr = new PageRequest(page - 1, rows);
 
         Page pageData = memberDao.findAll(new MySpecification<Member>().and(
-                Condition.like("userName", userName),
-                Condition.like("realName", realName),
-                Condition.eq("telephone", telephone)
+                Cnd.like("userName", userName),
+                Cnd.like("realName", realName),
+                Cnd.eq("telephone", telephone)
         ).asc("id"), pr);
 
         return new DataGrid<>(pageData);
