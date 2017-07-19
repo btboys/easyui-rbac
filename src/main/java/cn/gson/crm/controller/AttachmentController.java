@@ -6,9 +6,11 @@ import cn.gson.crm.common.Constants;
 import cn.gson.crm.model.domain.Attachment;
 import cn.gson.crm.model.domain.Member;
 import cn.gson.crm.service.AttachmentService;
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -38,7 +39,7 @@ import java.nio.charset.Charset;
 @RequestMapping("/attachment")
 public class AttachmentController {
 
-    Logger logger = Logger.getLogger(AttachmentController.class);
+    Logger logger = LoggerFactory.getLogger(AttachmentController.class);
 
     @Autowired
     AttachmentService attachmentService;
@@ -51,7 +52,7 @@ public class AttachmentController {
      * @param multipartFile
      * @return
      */
-    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    @PostMapping(value = "/upload")
     @ResponseBody
     public AjaxResult upload(@RequestParam(defaultValue = "PUBLIC") AttachmentType type,
                              @SessionAttribute(Constants.SESSION_MEMBER_KEY) Member member,
@@ -72,24 +73,23 @@ public class AttachmentController {
      * @param request
      * @return
      */
-    @RequestMapping(value = "/**", method = RequestMethod.GET)
-    public ResponseEntity<byte[]> loadFile(HttpServletRequest request, HttpServletResponse response) {
+    @GetMapping("/**")
+    @ResponseBody
+    public ResponseEntity<Resource> loadFile(HttpServletRequest request) {
+        String path = request.getServletPath();
         try {
-            String filePath = request.getServletPath();
-            Attachment att = attachmentService.getFile(filePath);
+            Attachment att = attachmentService.getFile(path);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentDispositionFormData("attachment", att.getOriginalName(), Charset.forName("utf-8"));
             headers.setContentType(MediaType.parseMediaType(att.getContentType()));
             headers.setContentLength(att.getFileSize());
-
-            return new ResponseEntity<>(FileUtils.readFileToByteArray(att.getFile()), headers, HttpStatus.OK);
+            return ResponseEntity.ok().headers(headers).body(new UrlResource(att.getFile().toURI()));
         } catch (FileNotFoundException e) {
-            logger.error("文件不存在", e);
-            response.setStatus(404);
+            logger.error("文件不存在{}", path);
+            return ResponseEntity.notFound().build();
         } catch (IOException e) {
-            response.setStatus(500);
-            logger.error("下载文件失败", e);
+            logger.error("下载文件失败{}", path);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return null;
     }
 }

@@ -17,6 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -83,8 +86,7 @@ public class AttachmentService {
 
             try {
                 //将文件存储到实际存储目录中
-                multipartFile.transferTo(new File(this.getRootPath(), filePath));
-
+                Files.copy(multipartFile.getInputStream(), this.getRootPath().resolve(filePath));
                 att.setFilePath("/attachment/" + filePath);
 
                 attachmentDao.save(att);
@@ -107,7 +109,7 @@ public class AttachmentService {
      */
     public Attachment getFile(String filePath) throws FileNotFoundException {
         Attachment att = attachmentDao.findByFilePath(filePath);
-        File file = new File(this.getRootPath(), filePath.substring("/attachment".length()));
+        File file = this.getRootPath().resolve(filePath.substring("/attachment/".length())).toFile();
         if (att == null || !file.exists()) {
             throw new FileNotFoundException("文件不存在");
         }
@@ -126,7 +128,7 @@ public class AttachmentService {
         //物理删除
         avatars.forEach((Attachment item) -> {
             try {
-                FileUtils.forceDelete(new File(getRootPath(), item.getFilePath().substring("/attachment".length())));
+                FileUtils.forceDelete(getRootPath().resolve(item.getFilePath().substring("/attachment/".length())).toFile());
             } catch (IOException e) {
                 logger.error("头像删除失败：" + item, e);
             }
@@ -148,7 +150,8 @@ public class AttachmentService {
         String path = type.name().toLowerCase() + separator + sdf.format(new Date()) + separator;
 
         //判断存储路径是否已经存在，不存在则需要先创建出来
-        File f = new File(getRootPath(), path);
+
+        File f = getRootPath().resolve(path).toFile();
         if (!f.exists()) {
             try {
                 FileUtils.forceMkdir(f);
@@ -165,12 +168,13 @@ public class AttachmentService {
      *
      * @return
      */
-    private String getRootPath() {
+    private Path getRootPath() {
         if (StringUtils.isEmpty(rootPath)) {
             //如果没有设置附件存储根目录，这默认存储到系统用户目录中
             rootPath = FilenameUtils.concat(FileUtils.getUserDirectoryPath(), "crm_attachments");
         }
-        return rootPath;
+
+        return Paths.get(rootPath);
     }
 
     /**

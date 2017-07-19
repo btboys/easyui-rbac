@@ -69,7 +69,6 @@ public class MemberController {
         ).asc("id"), pr);
 
         return new DataGrid<>(pageData);
-
     }
 
     @RequestMapping("/form")
