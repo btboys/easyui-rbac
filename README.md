@@ -22,6 +22,10 @@ data.sql为初始化数据SQL脚本。
 
 [案例在线演示](http://crud.jeasyuicn.com/)
 
+# 视频教学
+[视频教学](https://bbs.jeasyuicn.com/forum-7.htm)
+
+
 ##### 项目截图
 
 ![输入图片说明](https://git.oschina.net/uploads/images/2017/0629/172822_51c49f23_82.jpeg "在这里输入图片标题")
