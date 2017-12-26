@@ -22,8 +22,25 @@ data.sql为初始化数据SQL脚本。
 
 [案例在线演示](http://crud.jeasyuicn.com/)
 
-# 视频教学
-[视频教学](https://bbs.jeasyuicn.com/forum-7.htm)
+# 视频地址	
+
+[第一季：SpringBoot&Easyui系列-9、动态按钮权限](https://bbs.jeasyuicn.com/thread-203.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-8、动态菜单](https://bbs.jeasyuicn.com/thread-202.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-7、登录功能实现](https://bbs.jeasyuicn.com/thread-193.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-6、用户管理模块实现](https://bbs.jeasyuicn.com/thread-188.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-5、角色管理模块实现](https://bbs.jeasyuicn.com/thread-173.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-4、资源管理模块实现](https://bbs.jeasyuicn.com/thread-162.htm)
+	 	
+[第一季：SpringBoot&Easyui系列-3、主界面和图标美化](https://bbs.jeasyuicn.com/thread-150.htm)
+	 	
+[第一季：SpringBoot&Easyui之权限案例 -- 2、权限数据结构设计和实体类创建](https://bbs.jeasyuicn.com/thread-142.htm)
+	 	
+[第一季：SpringBoot&Easyui之权限案例 -- 1、工程搭建和配置](https://bbs.jeasyuicn.com/thread-138.htm)
 
 
 ##### 项目截图
